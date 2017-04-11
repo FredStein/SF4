@@ -1,0 +1,23 @@
+<resources>
+    <string name="app_name">SN4</string>
+    <string name="button_sensors">Display Sensor Values</string>
+    <string name="sensor_list">Sensors Present</string>
+    <string name="present">" Present"</string>
+    <string name="absent">" Absent"</string>
+    <string name="Accel_group">Accelerometer</string>
+    <string name="Gyro_group">Gyroscope</string>
+    <string name="LA">Linear\nAcceleration</string>
+    <string name="Gravity">Gravity</string>
+    <string name="Rotation">Rotation</string>
+    <string name="X">"X: "</string>
+    <string name="Y">"Y: "</string>
+    <string name="Z">"Z: "</string>
+    <string name="m">"r: "</string>
+    <string name="Phi">"\u03C6: "</string>
+    <string name="Theta">"\u03B8: "</string>
+    <string name="Psi">"\u03C8: "</string>
+    <string name="Distance">"Distance: "</string>
+    <string name="dUnits">m</string>
+    <string name="ts">"Time: "</string>
+
+</resources>
