@@ -15,7 +15,10 @@
             </intent-filter>
         </activity>
         <activity android:name=".SensorActivity"></activity>
-
+        <service
+            android:name="com.fred.sn4.UsbService"
+            android:enabled="true">
+        </service>
     </application>
 
 </manifest>
