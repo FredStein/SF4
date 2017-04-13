@@ -15,6 +15,7 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -331,9 +332,13 @@ public class SensorActivity extends AppCompatActivity implements SensorEventList
             switch (msg.what) {
                 case UsbService.MESSAGE_FROM_SERIAL_PORT:
                     String data = (String) msg.obj;
-                    long ts = msg.getWhen();
-                    mActivity.get().usbSensVal.setText(data);
-                    mActivity.get().usbSensTime.setText(String.format ("%d", ts%1000));
+                    data = data.trim();
+                    if (data.endsWith("m")){
+                        data = data.substring(0,data.length()-1);
+                        long ts = currentTimeMillis();
+                        mActivity.get().usbSensVal.setText(data);
+                        mActivity.get().usbSensTime.setText(String.format ("%d", ts%100000));
+                    }
                     break;
             }
         }
