@@ -576,9 +576,11 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textSize="12sp"
-        android:textColor="@android:color/holo_blue_light"
+        android:textColor="@android:color/white"
         android:layout_marginTop="8dp"
-        android:layout_marginLeft="16dp"/>
+        android:layout_marginLeft="16dp"
+        android:layout_columnSpan="7"/>
+
 
     <TextView
         android:id="@+id/dUnits"
