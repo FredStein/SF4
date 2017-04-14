@@ -117,7 +117,7 @@ public class SensorActivity extends AppCompatActivity implements SensorEventList
                 mSensorL.add(i,mSensorManager.getDefaultSensor(item));
                 sPrefix.put(item,prefixList[i]);
                 mSensorManager.registerListener(this, mSensorL.get(i),
-                        SensorManager.SENSOR_DELAY_UI);                 //~62.5ms _NORMAl ~190 ms _FASTEST ~5ms
+                        SensorManager.SENSOR_DELAY_UI);                 //(67)~62.5ms _NORMAl(200) ~190 ms _FASTEST(0) ~5ms (Or use timing in microseconds)
             } else {
                 Toast.makeText(getApplicationContext(), sNames[i] + getResources().getString(R.string.absent), Toast.LENGTH_LONG).show();
             }
@@ -343,6 +343,4 @@ public class SensorActivity extends AppCompatActivity implements SensorEventList
             }
         }
     }
-
-
 }
