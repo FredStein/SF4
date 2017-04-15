@@ -15,7 +15,6 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
-import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -78,9 +77,14 @@ public class SensorActivity extends AppCompatActivity implements SensorEventList
         }
     };
     private UsbService usbService;
+    private TextView aX;
+    private TextView aY;
+    private TextView aZ;
+    private TextView aT;
     private TextView usbSensVal;
     private TextView usbSensTime;
-    private MyHandler mHandler;
+    private usbHandler mHandler;
+    private sensorHandler sHandler;
 
     private final ServiceConnection usbConnection = new ServiceConnection() {
         @Override
@@ -104,7 +108,13 @@ public class SensorActivity extends AppCompatActivity implements SensorEventList
 
         mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
 
-        mHandler = new MyHandler(this);                 //Instatiate usb message handler
+        sHandler = new sensorHandler(this);              //Instatiate sensor message handler
+        mHandler = new usbHandler(this);                 //Instatiate usb message handler
+
+        aX = (TextView) findViewById(R.id.Ax);
+        aY = (TextView) findViewById(R.id.Ay);
+        aZ = (TextView) findViewById(R.id.Az);
+        aT = (TextView) findViewById(R.id.At);
 
         usbSensVal = (TextView) findViewById(R.id.d);  //Initialise usb sensor value & timestamp display fields
         usbSensTime = (TextView) findViewById(R.id.Dt);
@@ -320,10 +330,10 @@ public class SensorActivity extends AppCompatActivity implements SensorEventList
         bindService(bindingIntent, serviceConnection, Context.BIND_AUTO_CREATE);
     }
 
-    private static class MyHandler extends Handler {
+    private static class usbHandler extends Handler {
         private final WeakReference<SensorActivity> mActivity;
 
-        public MyHandler(SensorActivity activity) {
+        public usbHandler(SensorActivity activity) {
             mActivity = new WeakReference<>(activity);
         }
 
@@ -343,4 +353,33 @@ public class SensorActivity extends AppCompatActivity implements SensorEventList
             }
         }
     }
+
+    private static class sensorHandler extends Handler {
+        private final WeakReference<SensorActivity> mActivity;
+
+        public sensorHandler(SensorActivity activity) {
+            mActivity = new WeakReference<>(activity);
+        }
+
+        @Override
+        public void handleMessage(Message msg) {
+            //:TODO msg to contain formatted x,y,z,(r),t strings
+            Bundle msgBundle = msg.getData();
+            switch (msg.what) {
+                case TYPE_ACCELEROMETER:{
+                    String sx = msgBundle.getString("x");
+                    String sy = msgBundle.getString("y");
+                    String sz = msgBundle.getString("z");
+                    String st = msgBundle.getString("t");
+
+                    mActivity.get().aX.setText(sx);
+                    mActivity.get().aY.setText(sy);
+                    mActivity.get().aZ.setText(sz);
+                    mActivity.get().aT.setText(st);
+                }
+                    break;
+            }
+        }
+    }
+
 }
