@@ -29,10 +29,7 @@ public class UDPActivity extends AppCompatActivity {
             switch (msg.what) {
                 case TYPE_ACCELEROMETER:{
                     String[] sData = (String[]) msg.obj;
-                    mActivity.get().aX.setText(sData[0]);
-                    mActivity.get().aY.setText(sData[1]);
-                    mActivity.get().aZ.setText(sData[2]);
-                    mActivity.get().aT.setText(sData[3].substring(sData[3].length()-5,sData[3].length()));
+                    //TODO Insert code to read uQueue for each sensor here
                 }break;
             }
         }
