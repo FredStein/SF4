@@ -10,6 +10,10 @@ import android.widget.TextView;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
+    //tag for logging
+    private static final String TAG = MainActivity.class.getSimpleName();
+    //flag for logging
+    private boolean mLogging = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -20,8 +24,8 @@ public class MainActivity extends AppCompatActivity {
         TextView tv = (TextView) findViewById(R.id.tv);
 
         List<Sensor> mList = mSensorManager.getSensorList(Sensor.TYPE_ALL);
-        for (int i = 1; i < mList.size(); i++) {
-            tv.append("\n" + mList.get(i).getStringType());
+        for (Sensor item : mList) {
+            tv.append( "\n" + item.getStringType());
         }
     }
 

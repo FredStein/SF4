@@ -15,6 +15,7 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -41,75 +42,43 @@ import static java.lang.System.currentTimeMillis;
 //SENSOR_TYPE_ROTATION_VECTOR ( unitless World coordinates?)     R      11
 
 public class SensorActivity extends AppCompatActivity implements SensorEventListener {
+    //tag for logging
+    private static final String TAG = SensorActivity.class.getSimpleName();
+    //flag for logging
+    private static boolean mLogging = false;
     private SensorManager mSensorManager;
     private List<Sensor> mSensorL = new ArrayList<>();
-    private int[] sList = {TYPE_ACCELEROMETER,TYPE_GYROSCOPE,TYPE_GRAVITY,
-                            TYPE_LINEAR_ACCELERATION,TYPE_ROTATION_VECTOR};
+    private int[] sList = {TYPE_GYROSCOPE,TYPE_GRAVITY,TYPE_LINEAR_ACCELERATION,TYPE_ROTATION_VECTOR}; //TYPE_ACCELEROMETER
     private String[] sNames = {"Accelerometer","Gyroscope","Gravity Sensor", "Linear Accelerometer",
                             "Rotation Vector"};
-    private String[] prefixList = {"A","G","LA","Grav","R"};
-    //TODO  Integrate sList and sNames into a map
+//    private String[] prefixList = {"A","G","LA","Grav","R"};
+    //:TODO  Integrate sList and sNames into a map
     private Map<Integer,String> sPrefix = new HashMap<>();
-    private long timestamp;
-
-    // USB Element Initialisation Start
-    // Notifications from UsbService will be received here.
-    private final BroadcastReceiver mUsbReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            switch (intent.getAction()) {
-                case UsbService.ACTION_USB_PERMISSION_GRANTED: // USB PERMISSION GRANTED
-                    Toast.makeText(context, "USB Ready", Toast.LENGTH_SHORT).show();
-                    break;
-                case UsbService.ACTION_USB_PERMISSION_NOT_GRANTED: // USB PERMISSION NOT GRANTED
-                    Toast.makeText(context, "USB Permission not granted", Toast.LENGTH_SHORT).show();
-                    break;
-                case UsbService.ACTION_NO_USB: // NO USB CONNECTED
-                    Toast.makeText(context, "No USB connected", Toast.LENGTH_SHORT).show();
-                    break;
-                case UsbService.ACTION_USB_DISCONNECTED: // USB DISCONNECTED
-                    Toast.makeText(context, "USB disconnected", Toast.LENGTH_SHORT).show();
-                    break;
-                case UsbService.ACTION_USB_NOT_SUPPORTED: // USB NOT SUPPORTED
-                    Toast.makeText(context, "USB device not supported", Toast.LENGTH_SHORT).show();
-                    break;
-            }
-        }
-    };
-    private UsbService usbService;
     private TextView aX;
     private TextView aY;
     private TextView aZ;
     private TextView aT;
     private TextView usbSensVal;
     private TextView usbSensTime;
+    private UsbService usbService;
     private usbHandler mHandler;
     private sensorHandler sHandler;
-
-    private final ServiceConnection usbConnection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName arg0, IBinder arg1) {
-            usbService = ((UsbService.UsbBinder) arg1).getService();
-            usbService.setHandler(mHandler);
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName arg0) {
-            usbService = null;
-        }
-    };
-
-    // USb Element Initialisation end
+    private long timestamp;                                                                 //Reserved for future use (or not)
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_sensor_activity);
+        if (mLogging){
+            Log.v(TAG, "Ping");
+        }
 
         mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-
-        sHandler = new sensorHandler(this);              //Instatiate sensor message handler
-        mHandler = new usbHandler(this);                 //Instatiate usb message handler
+        sHandler = new sensorHandler(this);                                             //Instatiate sensor message handler
+        mHandler = new usbHandler(this);                                                //Instatiate usb message handler
+        SensorThread a = new SensorThread(TYPE_ACCELEROMETER, this,sHandler);
+        new Thread(a).start();                                                          //Start accelerometer thread
 
         aX = (TextView) findViewById(R.id.Ax);
         aY = (TextView) findViewById(R.id.Ay);
@@ -125,7 +94,7 @@ public class SensorActivity extends AppCompatActivity implements SensorEventList
             if (mSensorManager.getDefaultSensor(item) != null) {
                 // We have this sensor
                 mSensorL.add(i,mSensorManager.getDefaultSensor(item));
-                sPrefix.put(item,prefixList[i]);
+//                sPrefix.put(item,prefixList[i]);
                 mSensorManager.registerListener(this, mSensorL.get(i),
                         SensorManager.SENSOR_DELAY_UI);                 //(67)~62.5ms _NORMAl(200) ~190 ms _FASTEST(0) ~5ms (Or use timing in microseconds)
             } else {
@@ -136,37 +105,8 @@ public class SensorActivity extends AppCompatActivity implements SensorEventList
     }
 
     @Override
-    public void onSensorChanged(SensorEvent event) {
+    public void onSensorChanged(SensorEvent event) {                        //Tis eventually unneeded when each sensor running in own thread
         switch (event.sensor.getType()) {
-            case TYPE_ACCELEROMETER:{
-                TextView x;
-                TextView y;
-                TextView z;
-                TextView t;
-
-                x = (TextView) findViewById(R.id.Ax);
-                y = (TextView) findViewById(R.id.Ay);
-                z = (TextView) findViewById(R.id.Az);
-                t = (TextView) findViewById(R.id.At);
-
-                float xVal = event.values[0];
-                float yVal = event.values[1];
-                float zVal = event.values[2];
-                long ts = (currentTimeMillis() + (event.timestamp - elapsedRealtimeNanos ()) / 1000000L);   //Milliseconds
-
-                String sx = String.format ("%.3f", xVal);
-                String sy = String.format ("%.3f", yVal);
-                String sz = String.format ("%.3f", zVal);
-                String st = String.format ("%d", ts%100000);
-
-                timestamp = ts;
-
-                x.setText(sx);
-                y.setText(sy);
-                z.setText(sz);
-                t.setText(st);
-            }break;
-
             case TYPE_GYROSCOPE:{
                 TextView x;
                 TextView y;
@@ -304,6 +244,65 @@ public class SensorActivity extends AppCompatActivity implements SensorEventList
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
     }
 
+    private static class sensorHandler extends Handler {
+        private final WeakReference<SensorActivity> mActivity;
+        public sensorHandler(SensorActivity activity) {
+            mActivity = new WeakReference<>(activity);
+        }
+
+        @Override
+        public void handleMessage(Message msg) {
+            //:Param msg .obj element is array of formatted strings
+            switch (msg.what) {
+                case TYPE_ACCELEROMETER:{
+                    String[] sData = (String[]) msg.obj;
+                    mActivity.get().aX.setText(sData[0]);
+                    mActivity.get().aY.setText(sData[1]);
+                    mActivity.get().aZ.setText(sData[2]);
+                    mActivity.get().aT.setText(sData[3].substring(sData[3].length()-5,sData[3].length()));
+                }break;
+            }
+        }
+    }
+
+    // USB objects
+    // Notifications from UsbService will be received here.
+    private final BroadcastReceiver mUsbReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            switch (intent.getAction()) {
+                case UsbService.ACTION_USB_PERMISSION_GRANTED: // USB PERMISSION GRANTED
+                    Toast.makeText(context, "USB Ready", Toast.LENGTH_SHORT).show();
+                    break;
+                case UsbService.ACTION_USB_PERMISSION_NOT_GRANTED: // USB PERMISSION NOT GRANTED
+                    Toast.makeText(context, "USB Permission not granted", Toast.LENGTH_SHORT).show();
+                    break;
+                case UsbService.ACTION_NO_USB: // NO USB CONNECTED
+                    Toast.makeText(context, "No USB connected", Toast.LENGTH_SHORT).show();
+                    break;
+                case UsbService.ACTION_USB_DISCONNECTED: // USB DISCONNECTED
+                    Toast.makeText(context, "USB disconnected", Toast.LENGTH_SHORT).show();
+                    break;
+                case UsbService.ACTION_USB_NOT_SUPPORTED: // USB NOT SUPPORTED
+                    Toast.makeText(context, "USB device not supported", Toast.LENGTH_SHORT).show();
+                    break;
+            }
+        }
+    };
+
+    private final ServiceConnection usbConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName arg0, IBinder arg1) {
+            usbService = ((UsbService.UsbBinder) arg1).getService();
+            usbService.setHandler(mHandler);
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName arg0) {
+            usbService = null;
+        }
+    };
+
     private void setFilters() {                     //USB Filter configuration
         IntentFilter filter = new IntentFilter();
         filter.addAction(UsbService.ACTION_USB_PERMISSION_GRANTED);
@@ -332,7 +331,6 @@ public class SensorActivity extends AppCompatActivity implements SensorEventList
 
     private static class usbHandler extends Handler {
         private final WeakReference<SensorActivity> mActivity;
-
         public usbHandler(SensorActivity activity) {
             mActivity = new WeakReference<>(activity);
         }
@@ -353,33 +351,4 @@ public class SensorActivity extends AppCompatActivity implements SensorEventList
             }
         }
     }
-
-    private static class sensorHandler extends Handler {
-        private final WeakReference<SensorActivity> mActivity;
-
-        public sensorHandler(SensorActivity activity) {
-            mActivity = new WeakReference<>(activity);
-        }
-
-        @Override
-        public void handleMessage(Message msg) {
-            //:TODO msg to contain formatted x,y,z,(r),t strings
-            Bundle msgBundle = msg.getData();
-            switch (msg.what) {
-                case TYPE_ACCELEROMETER:{
-                    String sx = msgBundle.getString("x");
-                    String sy = msgBundle.getString("y");
-                    String sz = msgBundle.getString("z");
-                    String st = msgBundle.getString("t");
-
-                    mActivity.get().aX.setText(sx);
-                    mActivity.get().aY.setText(sy);
-                    mActivity.get().aZ.setText(sz);
-                    mActivity.get().aT.setText(st);
-                }
-                    break;
-            }
-        }
-    }
-
 }
