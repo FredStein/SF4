@@ -7,7 +7,8 @@ package com.fred.sn4;
  * bin and listenHint are available for future use as parameters to the SensorThread constructor
  * :param  int sensorType:      any android sensor
    :param  Context mContext:    the context starting the thread
-   :param  Handler sHandler:    the handler receiving the binned sensor readings
+   :param  Handler sHandler:    the display handler receiving the binned sensor readings
+   :param  Queue uQueue:        the queue holding each binned sensor reading (taken off async and built to XML)
  */
 
 import android.content.Context;
@@ -17,6 +18,8 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Handler;
 import android.os.HandlerThread;
+
+import java.util.Queue;
 
 import static android.content.Context.SENSOR_SERVICE;
 import static android.os.SystemClock.elapsedRealtimeNanos;
@@ -31,6 +34,7 @@ class SensorThread implements Runnable {
     private int sensorType;
     private Context mContext;
     private Handler sHandler;
+    private Queue uQeue;
     private int listenHint = 20000;         //Hint to system for listener frequency in microseconds (20 ms)
     private int bin = 50000000;             //bin length in nanoseconds (50 ms)
     private long halfTick = bin/2;
@@ -106,6 +110,7 @@ class SensorThread implements Runnable {
 
     private void publishEpoch(String[] sData) {
         sHandler.obtainMessage(sensorType,sData).sendToTarget();
+        //TODO Place each package on uQueue
     }
 
 //    public void cleanThread(){
