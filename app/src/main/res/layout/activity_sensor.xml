@@ -3,9 +3,11 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:label="@string/app_name"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:columnCount="9"
+    android:rowCount = "16"
     android:background="@color/colorPrimaryDark"
     tools:context="com.fred.sn4.SensorActivity">
 
@@ -18,7 +20,8 @@
         android:layout_height="wrap_content"
         android:textSize="16sp"
         android:textColor="@android:color/holo_blue_light"
-        android:layout_marginLeft="16dp"/>
+        android:layout_marginLeft="16dp"
+        tools:ignore="RtlHardcoded" />
 
     <TextView
         android:id="@+id/AXAxis"
@@ -62,7 +65,8 @@
         android:layout_height="wrap_content"
         android:textSize="12sp"
         android:textColor="@android:color/holo_blue_light"
-        android:layout_marginLeft="16dp" />
+        android:layout_marginLeft="16dp"
+        tools:ignore="HardcodedText" />
 
     <TextView
         android:id="@+id/AZAxis"
@@ -578,8 +582,7 @@
         android:textSize="12sp"
         android:textColor="@android:color/white"
         android:layout_marginTop="8dp"
-        android:layout_marginLeft="16dp"
-        android:layout_columnSpan="7"/>
+        android:layout_marginLeft="16dp"/>
 
 
     <TextView
@@ -618,4 +621,29 @@
         android:layout_marginTop="8dp"
         android:layout_marginLeft="16dp"/>
 
+    <ToggleButton
+        android:id="@+id/DisplayData"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_column="0"
+        android:layout_columnSpan="5"
+        android:layout_marginLeft="16dp"
+        android:layout_marginTop="24dp"
+        android:layout_row="11"
+        android:text="@string/StartDisplay"
+        android:textOff="@string/StartDisplay"
+        android:textOn="@string/StopDisplay" />
+
+    <ToggleButton
+        android:id="@+id/SendData"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_column="0"
+        android:layout_columnSpan="5"
+        android:layout_marginTop="24dp"
+        android:layout_marginLeft="16dp"
+        android:layout_row="12"
+        android:text="@string/StartSend"
+        android:textOff="@string/StartSend"
+        android:textOn="@string/StopSend" />
 </GridLayout>

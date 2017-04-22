@@ -16,10 +16,12 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.os.Message;
 
-import java.util.Queue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import static android.content.Context.SENSOR_SERVICE;
 import static android.os.SystemClock.elapsedRealtimeNanos;
@@ -34,7 +36,6 @@ class SensorThread implements Runnable {
     private int sensorType;
     private Context mContext;
     private Handler sHandler;
-    private Queue uQeue;
     private int listenHint = 20000;         //Hint to system for listener frequency in microseconds (20 ms)
     private int bin = 50000000;             //bin length in nanoseconds (50 ms)
     private long halfTick = bin/2;
@@ -42,20 +43,31 @@ class SensorThread implements Runnable {
     private long tock;
     private int i = 1;
     private float acc[];
+    private UDPService udpService;
+    private LinkedBlockingQueue<Message> wQ;
+    private Thread wThread;
 
-    SensorThread(int sensorType, Context mContext, Handler sHandler) {
+    SensorThread(int sensorType, Context mContext, Handler sHandler,UDPService udp) {
         this.sensorType = sensorType;
         this.mContext = mContext;
         this.sHandler = sHandler;
+        this.udpService = udp;
     }
 
     @Override
     public void run() {
         SensorManager mSensorManager = (SensorManager) mContext.getSystemService(SENSOR_SERVICE);
         Sensor sensor = mSensorManager.getDefaultSensor(sensorType);
-        HandlerThread mHandlerThread = new HandlerThread("SensorListener");
-        mHandlerThread.start();
-        Handler handler = new Handler(mHandlerThread.getLooper());
+        HandlerThread writeToUIThread = new HandlerThread("UIWriter" + String.format ("%d", sensorType));
+        writeToUIThread.start();
+        Handler writeToUI = new Handler(writeToUIThread.getLooper());
+        this.wQ = udpService.q1;
+        UDPService.qWriter writeQ;
+        writeQ = udpService.new udpService.qWriter(wQ);
+        //starting producer to place messages on queue
+        this.wThread = new Thread(writeQ);
+        wThread.start();
+
 
         SensorEventListener mListener = new SensorEventListener() {
             @Override
@@ -79,7 +91,6 @@ class SensorThread implements Runnable {
                     */
                     tick = tock;                                                //Reset bin start time
                     tock = tick + bin;
-
                     for (int j = 0; j < event.values.length; j++){               //Reset accumulator registers and counter
                         acc[j] = event.values[j];
                     }
@@ -92,8 +103,7 @@ class SensorThread implements Runnable {
                 // do nothing
             }
         };
-
-        mSensorManager.registerListener(mListener, sensor, listenHint ,handler);                    // listenHint set above. default = 50ms
+        mSensorManager.registerListener(mListener, sensor, listenHint ,writeToUI);                    // listenHint set above. default = 50ms
     }
 
     private String[] formatter(){
@@ -103,14 +113,28 @@ class SensorThread implements Runnable {
         for (int j = 0; j < avData.length-1; j++){
             avData[j] = String.format ("%.3f", acc[j] / i);
         }
-        avData[3] = String.format ("%d", ts);
-
+        avData[acc.length] = String.format ("%d", ts);
+        //Create Message
         return avData;
     }
 
     private void publishEpoch(String[] sData) {
         sHandler.obtainMessage(sensorType,sData).sendToTarget();
-        //TODO Place each package on uQueue
+        Bundle outArr = new Bundle();
+        outArr.putFloatArray("data",acc);
+        Message outPkt = new Message();
+        outPkt.what = sensorType;
+        outPkt.setData(outArr);
+
+        if (sData[0] != "exit"){            //Modify Test - place 0 in outPkt.what to signal no more data from sensor (close thread)
+            try {
+                wQ.put(outPkt);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }else {
+            //set a flag in here to kill the thread when no more to write.
+        }
     }
 
 //    public void cleanThread(){

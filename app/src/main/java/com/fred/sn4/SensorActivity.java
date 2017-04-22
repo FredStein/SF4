@@ -48,12 +48,6 @@ public class SensorActivity extends AppCompatActivity implements SensorEventList
     private static boolean mLogging = false;
     private SensorManager mSensorManager;
     private List<Sensor> mSensorL = new ArrayList<>();
-    private int[] sList = {TYPE_GYROSCOPE,TYPE_GRAVITY,TYPE_LINEAR_ACCELERATION,TYPE_ROTATION_VECTOR}; //TYPE_ACCELEROMETER
-    private String[] sNames = {"Accelerometer","Gyroscope","Gravity Sensor", "Linear Accelerometer",
-                            "Rotation Vector"};
-//    private String[] prefixList = {"A","G","LA","Grav","R"};
-    //:TODO  Integrate sList and sNames into a map
-    private Map<Integer,String> sPrefix = new HashMap<>();
     private TextView aX;
     private TextView aY;
     private TextView aZ;
@@ -64,12 +58,18 @@ public class SensorActivity extends AppCompatActivity implements SensorEventList
     private usbHandler mHandler;
     private sensorHandler sHandler;
     private long timestamp;                                                                 //Reserved for future use (or not)
+    private int[] sList = {TYPE_GYROSCOPE,TYPE_GRAVITY,TYPE_LINEAR_ACCELERATION,TYPE_ROTATION_VECTOR}; //TYPE_ACCELEROMETER
+    private String[] sNames = {"Accelerometer","Gyroscope","Gravity Sensor", "Linear Accelerometer",
+            "Rotation Vector"};
+    //    private String[] prefixList = {"A","G","LA","Grav","R"};
+    //:TODO  Integrate sList and sNames into a map
+    private Map<Integer,String> sPrefix = new HashMap<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.activity_sensor_activity);
+        setContentView(R.layout.activity_sensor);
         if (mLogging){
             Log.v(TAG, "Ping");
         }
@@ -77,7 +77,9 @@ public class SensorActivity extends AppCompatActivity implements SensorEventList
         mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         sHandler = new sensorHandler(this);                                             //Instatiate sensor message handler
         mHandler = new usbHandler(this);                                                //Instatiate usb message handler
-        SensorThread a = new SensorThread(TYPE_ACCELEROMETER, this,sHandler);
+        UDPService udp = new UDPService();
+        udp.startService(new Intent(this,UDPService.class));
+        SensorThread a = new SensorThread(TYPE_ACCELEROMETER, this,sHandler,udp);
         new Thread(a).start();                                                          //Start accelerometer thread
 
         aX = (TextView) findViewById(R.id.Ax);
@@ -246,6 +248,7 @@ public class SensorActivity extends AppCompatActivity implements SensorEventList
 
     private static class sensorHandler extends Handler {
         private final WeakReference<SensorActivity> mActivity;
+
         public sensorHandler(SensorActivity activity) {
             mActivity = new WeakReference<>(activity);
         }

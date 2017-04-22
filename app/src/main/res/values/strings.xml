@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">SN4</string>
+    <string name="app_name">SensorNode</string>
     <string name="button_sensors">Display Sensor Values</string>
     <string name="sensor_list">Sensors Present</string>
     <string name="present">" Present"</string>
@@ -19,5 +19,8 @@
     <string name="Distance">"Distance: "</string>
     <string name="dUnits">m</string>
     <string name="ts">"Time: "</string>
-
+    <string name="StartSend">"Start Sending UDP"</string>
+    <string name="StopSend">"Stop Sending UDP"</string>
+    <string name="StartDisplay">"Start Display"</string>
+    <string name="StopDisplay">"Freeze Display"</string>
 </resources>
