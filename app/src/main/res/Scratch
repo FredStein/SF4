@@ -1,0 +1,17 @@
+TODO    Thread shutdown
+        Threads should continue to run if transmission started when both SensorActivity and app do not have focus
+        Check threads stop if app closed
+TODO    Data display button
+        Displays but does not transmit data
+TODO    Data Start / Stop transmission button (also strats display)
+TODO    Activity (fragment) to set address for transmission
+
+<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><NodeId>FS</NodeId><Accelerometer><Accelerometer1>0.0</Accelerometer1><Accelerometer2>0.0</Accelerometer2><Accelerometer3>0.0</Accelerometer3></Accelerometer><Gyroscope><Gyroscope1>0.0</Gyroscope1><Gyroscope2>0.0</Gyroscope2><Gyroscope3>0.0</Gyroscope3></Gyroscope><Gravity><Gravity1>0.0</Gravity1><Gravity2>0.0</Gravity2><Gravity3>0.0</Gravity3></Gravity><LinearAcceleration><LinearAcceleration1>0.0</LinearAcceleration1><LinearAcceleration2>0.0</LinearAcceleration2><LinearAcceleration3>0.0</LinearAcceleration3></LinearAcceleration><RotationVector><RotationVector1>0.0</RotationVector1><RotationVector2>0.0</RotationVector2><RotationVector3>0.0</RotationVector3></RotationVector><TimeStamp>1492135302432</TimeStamp>
+Review XML structure:
+ <NodeId>FS</NodeId> vs -> Will probably go here but needs change to SNodeClient
+ <FS> DATA </FS>
+
+                    if (mLogging){
+                        String logString = "Debug :" + <Insert Data Here>;
+                        Log.v(TAG, logString);
+                    }
